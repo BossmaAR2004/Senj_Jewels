@@ -14,7 +14,7 @@ export default function OrderDetailPage() {
   const { user, loading, db } = useFirebase()
   const router = useRouter()
   const params = useParams()
-  const orderId = params.id as string
+  const orderId = params?.id as string
 
   const [order, setOrder] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)

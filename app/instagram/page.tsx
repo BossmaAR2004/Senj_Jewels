@@ -14,7 +14,7 @@ const instagramPosts = [
 ];
 
 export default function InstagramPage() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<string[]>([]);
 
   useEffect(() => {
     setPosts([...instagramPosts].reverse());

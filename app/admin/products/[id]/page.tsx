@@ -18,7 +18,7 @@ export default function ProductForm() {
   const { user, isAdmin, loading, db, storage } = useFirebase()
   const router = useRouter()
   const params = useParams()
-  const productId = params.id as string
+  const productId = params?.id as string
   const isNewProduct = productId === "new"
 
   const [formData, setFormData] = useState({
