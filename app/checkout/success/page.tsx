@@ -25,7 +25,7 @@ async function storeOrder(db: Firestore, orderId: string, orderData: Record<stri
 function OrderDetails() {
   const { db } = useFirebase()
   const searchParams = useSearchParams()
-  const orderId = searchParams.get('orderId')
+  const orderId = searchParams ? searchParams.get('orderId') : null
   const [orderData, setOrderData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
