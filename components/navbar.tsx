@@ -125,6 +125,9 @@ export default function Navbar() {
             <MobileNavLink href="/gemstone" onClick={() => setIsMenuOpen(false)}>
               Gemstone
             </MobileNavLink>
+            <MobileNavLink href="/Bubble-Tea-Earring" onClick={() => setIsMenuOpen(false)}>
+              Bubble Tea Earring
+            </MobileNavLink>
             <MobileNavLink href="/glass-beads" onClick={() => setIsMenuOpen(false)}>
               Glass Beads
             </MobileNavLink>
