@@ -22,30 +22,55 @@ export default function AdminLoginPage() {
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      // Sign in the user
-      const userCredential = await signIn(email, password)
-      const userId = userCredential.user.uid
-
-      // Check if the user is an admin
-      const adminDoc = await getDoc(doc(db, "admins", userId))
-      if (!adminDoc.exists()) {
-        throw new Error("You do not have admin access")
+      // Step 1: Sign in with Firebase Auth
+      const userCredential = await signIn(email, password);
+      
+      if (!userCredential?.user) {
+        throw new Error("Authentication failed");
       }
 
-      // Redirect to the admin dashboard
-      router.push("/admin")
-    } catch (error: any) {
-      setError(error.message || "Failed to sign in")
-    } finally {
-      setLoading(false)
-    }
-  }
+      // Step 2: Check admin status with delay to ensure auth is propagated
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const adminRef = doc(db, "admins", userCredential.user.uid);
+      const adminDoc = await getDoc(adminRef);
 
+      if (!adminDoc.exists()) {
+        throw new Error("Not authorized as admin");
+      }
+
+      const adminData = adminDoc.data();
+      if (!adminData?.isAdmin) {
+        throw new Error("Admin privileges not granted");
+      }
+
+      // Success - redirect to admin panel
+      console.log("✅ Admin access verified");
+      router.push("/admin");
+
+    } catch (error: any) {
+      console.error("❌ Login error:", error);
+      setError(
+        error.message === "Not authorized as admin" || 
+        error.message === "Admin privileges not granted"
+          ? "You do not have admin access"
+          : "Invalid email or password"
+      );
+      
+      // Redirect non-admins to home after delay
+      if (error.message.includes("admin")) {
+        setTimeout(() => router.push("/"), 2000);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return (
     <div className="max-w-md mx-auto my-12">
       <div className="text-center mb-8">

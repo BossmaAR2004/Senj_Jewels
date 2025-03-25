@@ -88,7 +88,7 @@ export default function CheckoutPage() {
         paymentMethod: paymentMethod,
         items: cart.items,
         subtotal: cart.total,
-        shipping: 0, // Assuming free shipping for now
+        shipping: 0,
         total: cart.total
       })
 
@@ -106,22 +106,36 @@ export default function CheckoutPage() {
 
       // If payment method is card, redirect to Stripe
       if (paymentMethod === "card") {
-        // In a real implementation, you would create a Stripe checkout session here
-        // and redirect the user to Stripe's checkout page
+        // Create Stripe checkout session
+        const response = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: cart.items,
+            customerEmail: formData.email,
+            customerName: formData.fullName,
+          }),
+        })
 
-        // For demo purposes, we'll just simulate a successful payment
-        setTimeout(() => {
-          // Clear cart
-          dispatch({ type: "CLEAR_CART" })
+        const { sessionId, error } = await response.json()
 
-          // Show success message
-          setSuccess(true)
+        if (error) {
+          throw new Error(error)
+        }
 
-          // Redirect to order confirmation
-          setTimeout(() => {
-            router.push(`/checkout/success?orderId=${orderRef.id}`)
-          }, 2000)
-        }, 1500)
+        // Redirect to Stripe checkout
+        const stripe = await stripePromise
+        if (!stripe) throw new Error("Stripe failed to initialize")
+
+        const { error: stripeError } = await stripe.redirectToCheckout({
+          sessionId,
+        })
+
+        if (stripeError) {
+          throw new Error(stripeError.message)
+        }
       } else {
         // For bank transfer, just show success and clear cart
         dispatch({ type: "CLEAR_CART" })

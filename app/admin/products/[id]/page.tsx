@@ -221,10 +221,11 @@ export default function ProductForm() {
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gemstone">Gemstone</SelectItem>
-                <SelectItem value="glass">Glass Beads</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
+              <SelectItem value="gemstone">Gemstone</SelectItem>
+              <SelectItem value="glass">Glass Beads</SelectItem>
+              <SelectItem value="bubble-tea-earrings">Bubble Tea Earrings</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
             </Select>
           </div>
 

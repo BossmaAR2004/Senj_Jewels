@@ -1,5 +1,6 @@
 "use client"
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { useFirebase } from "@/components/firebase-provider"
@@ -9,12 +10,40 @@ import { Minus, Plus, ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
-export default function ProductDetail() {
-  const { db, dispatch, user } = useFirebase()
-  const params = useParams()
-  const productId = params.id as string
+interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  stock: number
+  image: string
+  material?: string
+  dimensions?: string
+  createdAt?: Date
+  updatedAt?: Date
+}
 
-  const [product, setProduct] = useState<any>(null)
+function ProductDetailContent() {
+  const { db, dispatch, user } = useFirebase()
+  const params = useParams<{ id: string }>()
+  const productId = params?.id ?? null
+
+  if (!productId) {
+    return (
+      <div className="max-w-4xl mx-auto my-12 px-4 text-center">
+        <div className="bg-white/70 backdrop-blur-sm rounded-lg shadow-md p-8">
+          <h1 className="text-2xl font-bold text-teal-800 mb-4">Invalid Product</h1>
+          <p className="text-gray-600 mb-6">Product ID is missing</p>
+          <Button asChild className="bg-teal-600 hover:bg-teal-700">
+            <Link href="/shop">Continue Shopping</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [quantity, setQuantity] = useState(1)
@@ -31,7 +60,7 @@ export default function ProductDetail() {
           setProduct({
             id: productDoc.id,
             ...productDoc.data(),
-          })
+          } as Product)
         } else {
           setError("Product not found")
         }
@@ -186,7 +215,9 @@ export default function ProductDetail() {
           <div>
             <h3 className="font-semibold mb-2">Product Details:</h3>
             <ul className="space-y-1 text-sm text-gray-600">
-              <li>Category: {product.category === "gemstone" ? "Gemstone Jewelry" : "Glass Bead Jewelry"}</li>
+              <li>Category: {product.category === "gemstone" ? "Gemstone Jewelry" : 
+                            product.category === "bubble-tea-earrings" ? "Bubble Tea Earrings" : 
+                            "Glass Bead Jewelry"}</li>
               {product.material && <li>Material: {product.material}</li>}
               {product.dimensions && <li>Dimensions: {product.dimensions}</li>}
             </ul>
@@ -196,4 +227,11 @@ export default function ProductDetail() {
     </div>
   )
 }
+
+// Dynamically import the component with no SSR
+const ProductDetail = dynamic(() => Promise.resolve(ProductDetailContent), {
+  ssr: false
+})
+
+export default ProductDetail
 

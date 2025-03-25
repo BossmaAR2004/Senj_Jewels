@@ -2,8 +2,8 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState, useReducer } from "react"
-import { initializeApp } from "firebase/app"
-import { getAnalytics } from "firebase/analytics"
+import { initializeApp, getApps } from "firebase/app"
+import { getAnalytics, isSupported } from "firebase/analytics"
 import {
   getAuth,
   onAuthStateChanged,
@@ -104,7 +104,7 @@ type FirebaseContextType = {
   analytics: any
   auth: any
   db: any
-  storage: any  // Add storage to the context type
+  storage: any
   user: User | null
   isAdmin: boolean
   loading: boolean
@@ -119,60 +119,75 @@ type FirebaseContextType = {
 // Create Context
 const FirebaseContext = createContext<FirebaseContextType | null>(null)
 
-// Firebase App Init (Client-side only)
-let app: any = null
-let auth: any = null
-let db: any = null
-let analytics: any = null
-let storage: any = null
-
-if (typeof window !== "undefined" && !app) {
-  app = initializeApp(firebaseConfig)
-  auth = getAuth(app)
-  db = getFirestore(app)
-  analytics = getAnalytics(app)
-  storage = getStorage(app, "gs://sen-jewels.firebasestorage.app")
-}
-
 // Provider
 export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [firebaseApp, setFirebaseApp] = useState<any>(null)
+  const [analytics, setAnalytics] = useState<any>(null)
+  const [auth, setAuth] = useState<any>(null)
+  const [db, setDb] = useState<any>(null)
+  const [storage, setStorage] = useState<any>(null)
 
   const [cart, dispatch] = useReducer(cartReducer, { items: [], total: 0 })
 
+  // Initialize Firebase
   useEffect(() => {
-    if (!auth || !db) return
+    const initializeFirebase = async () => {
+      try {
+        // Initialize Firebase app if it hasn't been initialized
+        if (!getApps().length) {
+          const app = initializeApp(firebaseConfig)
+          setFirebaseApp(app)
 
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user)
+          // Initialize Auth
+          const authInstance = getAuth(app)
+          setAuth(authInstance)
 
-      if (user) {
-        try {
-          // First, check the specific admin
-          const specificAdminRef = doc(db, "admins", "24Y0vMVIHAdDdAvRd3A2K9HvKHQ2")
-          const specificAdminSnap = await getDoc(specificAdminRef)
-          console.log("🔥 Specific Admin Document:", specificAdminSnap.exists(), specificAdminSnap.data())
+          // Initialize Firestore
+          const dbInstance = getFirestore(app)
+          setDb(dbInstance)
 
-          // Then check if current user is admin
-          const adminRef = doc(db, "admins", user.uid)
-          const adminSnap = await getDoc(adminRef)
-          console.log("🔥 Current User Admin Status:", adminSnap.exists(), adminSnap.data())
-          
-          setIsAdmin(adminSnap.exists())
-        } catch (err) {
-          console.error("🚨 Firestore Read Error:", err)
-          setIsAdmin(false)
+          // Initialize Storage
+          const storageInstance = getStorage(app, "gs://sen-jewels.firebasestorage.app")
+          setStorage(storageInstance)
+
+          // Initialize Analytics only in browser environment
+          if (typeof window !== 'undefined') {
+            const analyticsInstance = await isSupported().then(yes => yes ? getAnalytics(app) : null)
+            setAnalytics(analyticsInstance)
+          }
+
+          // Set up auth state listener
+          const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
+            setUser(user)
+
+            if (user) {
+              try {
+                const adminRef = doc(dbInstance, "admins", user.uid)
+                const adminSnap = await getDoc(adminRef)
+                setIsAdmin(adminSnap.exists())
+              } catch (err) {
+                console.error("🚨 Firestore Read Error:", err)
+                setIsAdmin(false)
+              }
+            } else {
+              setIsAdmin(false)
+            }
+
+            setLoading(false)
+          })
+
+          return () => unsubscribe()
         }
-      } else {
-        setIsAdmin(false)
+      } catch (error) {
+        console.error("Firebase initialization error:", error)
+        setLoading(false)
       }
+    }
 
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
+    initializeFirebase()
   }, [])
 
   const signIn = (email: string, password: string) => {
@@ -195,11 +210,11 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
   return (
     <FirebaseContext.Provider
       value={{
-        firebaseApp: app,
+        firebaseApp,
         analytics,
         auth,
         db,
-        storage, // Add storage to the context value
+        storage,
         user,
         isAdmin,
         loading,

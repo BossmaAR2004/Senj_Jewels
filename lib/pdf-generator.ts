@@ -12,7 +12,7 @@ interface OrderPDFData {
   orderDate: Date | string
   customerName: string
   customerEmail: string
-  shippingAddress: string
+  shippingAddress: string  // Should be formatted as "Street, City, State/County, Postcode, Country"
   paymentMethod: string
   items: ExtendedCartItem[]
   subtotal: number
@@ -39,17 +39,21 @@ async function loadImage(url: string): Promise<string> {
 
 export async function downloadOrderPDF(order: OrderPDFData) {
   const doc = new jsPDF()
-  let yPos = 20 // Starting Y position
+  let yPos = 20
+  
+  // Define the teal color
+  const tealColor: [number, number, number] = [13/255, 148/255, 136/255] // Convert RGB to 0-1 range for jsPDF
 
   // Add business logo
-  const logoUrl = '/Images/logo.png' // Replace with your logo URL
+  const logoUrl = '/Images/logo.png'
   const logoData = await loadImage(logoUrl)
   if (logoData) {
-    doc.addImage(logoData, 'PNG', 14, yPos, 30, 30) // Adjusted logo size
+    doc.addImage(logoData, 'PNG', 14, yPos, 30, 30)
     yPos += 35
   }
 
-  // Add header
+  // Add header with teal color
+  doc.setTextColor(...tealColor)
   doc.setFontSize(20)
   doc.text('Sen Jewels', 14, yPos)
   yPos += 15
@@ -57,6 +61,9 @@ export async function downloadOrderPDF(order: OrderPDFData) {
   doc.setFontSize(16)
   doc.text('Order Confirmation', 14, yPos)
   yPos += 20
+
+  // Reset color for regular text
+  doc.setTextColor(0, 0, 0)
 
   // Add order details
   doc.setFontSize(12)
@@ -70,18 +77,30 @@ export async function downloadOrderPDF(order: OrderPDFData) {
   yPos += 10
   doc.setFontSize(11)
 
-  // Add customer information
+  // Format shipping address properly
+  const formattedAddress = order.shippingAddress
+    .split(',')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+
+  // Add customer information with properly formatted address
   const customerDetails = [
     `Name: ${order.customerName}`,
     `Email: ${order.customerEmail}`,
     'Shipping Address:',
-    ...order.shippingAddress.split('\n'), // Split address into multiple lines
+    ...formattedAddress.map(line => `  ${line}`), // Add indentation to address lines
     `Payment Method: ${order.paymentMethod === 'card' ? 'Credit/Debit Card' : 'Bank Transfer'}`
   ]
 
   for (const line of customerDetails) {
-    doc.text(line, 14, yPos)
-    yPos += 7
+    // Add more space after the "Shipping Address:" label
+    if (line === 'Shipping Address:') {
+      doc.text(line, 14, yPos)
+      yPos += 8 // Add extra space before address lines
+    } else {
+      doc.text(line, 14, yPos)
+      yPos += 7
+    }
   }
 
   yPos += 10 // Add space before items
@@ -117,7 +136,7 @@ export async function downloadOrderPDF(order: OrderPDFData) {
 
   yPos += 10 // Add space before table
 
-  // Add summary table
+  // Update table styles with teal color
   autoTable(doc, {
     startY: yPos,
     head: [['Item', 'Price', 'Quantity', 'Total']],
@@ -133,26 +152,37 @@ export async function downloadOrderPDF(order: OrderPDFData) {
       ['', '', 'Total:', `£${order.total.toFixed(2)}`]
     ],
     theme: 'striped',
-    headStyles: { fillColor: [13, 148, 136] },
-    footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0] },
+    headStyles: { 
+      fillColor: [13, 148, 136],
+      textColor: [255, 255, 255]
+    },
+    footStyles: { 
+      fillColor: [240, 240, 240], 
+      textColor: [13, 148, 136]
+    },
     styles: {
       fontSize: 10,
-      cellPadding: 5
+      cellPadding: 5,
     },
     columnStyles: {
       0: { cellWidth: 80 },
-      1: { cellWidth: 30, halign: 'right' },
+      1: { cellWidth: 30, halign: 'right', textColor: [13, 148, 136] },
       2: { cellWidth: 30, halign: 'center' },
-      3: { cellWidth: 30, halign: 'right' }
+      3: { cellWidth: 30, halign: 'right', textColor: [13, 148, 136] }
     }
   })
 
-  // Add footer
+  // Add footer with teal accents
   const finalY = (doc as any).lastAutoTable.finalY || 200
-  doc.setFontSize(12) // Increased text size
+  doc.setFontSize(12)
+  doc.setTextColor(...tealColor)
   doc.text('Thank you for shopping with Sen Jewels!', 14, finalY + 10)
-  doc.setFontSize(10) // Increased text size
-  doc.text('If you have any questions, please contact us at contact@senjewels.com', 14, finalY + 20)
+  
+  doc.setFontSize(10)
+  doc.setTextColor(0, 0, 0) // Reset to black for contact info
+  doc.text('If you have any questions, please contact us at', 14, finalY + 20)
+  doc.setTextColor(...tealColor)
+  doc.text('senjutibiswas05@gmail.com', 14, finalY + 30)
 
   // Download the PDF
   doc.save(`order-${order.orderId}.pdf`)

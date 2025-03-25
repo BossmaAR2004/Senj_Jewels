@@ -1,15 +1,18 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Mail, Phone, MapPin, Send } from "lucide-react"
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"
+import { useFirebase } from "@/components/firebase-provider"
 
 export default function ContactPage() {
+  const { db } = useFirebase()
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -30,9 +33,11 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      // In a real application, you would send this data to your backend
-      // For now, we'll simulate a successful submission
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Add the form data to Firestore dynamically
+      await addDoc(collection(db, "contactUs"), {
+        ...formData,
+        createdAt: serverTimestamp(),
+      })
 
       setSubmitStatus("success")
       setFormData({
@@ -42,10 +47,10 @@ export default function ContactPage() {
         message: "",
       })
     } catch (error) {
+      console.error("Firebase submission error:", error)
       setSubmitStatus("error")
     } finally {
       setIsSubmitting(false)
-
       // Reset status after 5 seconds
       setTimeout(() => {
         setSubmitStatus(null)
@@ -80,7 +85,7 @@ export default function ContactPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>{" "}
+              <Label htmlFor="name">Name</Label>
               <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
 
@@ -121,7 +126,7 @@ export default function ContactPage() {
               <Mail className="h-5 w-5 text-teal-600 mt-1 mr-3" />
               <div>
                 <h3 className="font-medium">Email</h3>
-                <p className="text-gray-600">contact@senjewels.com</p>
+                <p className="text-gray-600">senjutibiswas05@gmail.com</p>
               </div>
             </div>
 
@@ -129,7 +134,7 @@ export default function ContactPage() {
               <Phone className="h-5 w-5 text-teal-600 mt-1 mr-3" />
               <div>
                 <h3 className="font-medium">Phone</h3>
-                <p className="text-gray-600">+44 123 456 7890</p>
+                <p className="text-gray-600">+44 7438 919798</p>
               </div>
             </div>
 
@@ -140,15 +145,6 @@ export default function ContactPage() {
                 <p className="text-gray-600">London, United Kingdom</p>
               </div>
             </div>
-          </div>
-
-          <div className="mt-8">
-            <h3 className="font-medium mb-3">Business Hours</h3>
-            <ul className="space-y-2 text-gray-600">
-              <li>Monday - Friday: 9:00 AM - 6:00 PM</li>
-              <li>Saturday: 10:00 AM - 4:00 PM</li>
-              <li>Sunday: Closed</li>
-            </ul>
           </div>
         </div>
       </div>

@@ -46,13 +46,13 @@ export default function Home() {
               title="Gemstone Collection"
               description="Discover our exquisite gemstone jewelry, featuring natural stones that capture light and attention. Each piece is carefully crafted to showcase the unique beauty of precious and semi-precious stones."
               href="/gemstone"
-              imageSrc="/Images/GemstoneGreen.png"
+              imageSrc="/Images/GemstoneHomePage.jpg"
             />
             <CategoryCard
               title="Glass Beads Collection"
               description="Explore our colorful glass bead creations, each piece uniquely handcrafted with attention to detail. From vibrant bracelets to elegant necklaces, find your perfect accessory at just £2 each."
               href="/glass-beads"
-              imageSrc="/glass-beads.jpg"
+              imageSrc="/Images/GlassBeadsHomePage.jpg"
             />
           </div>
         </section>
