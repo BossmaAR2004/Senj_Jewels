@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { items, customerEmail, customerName } = body
+    const { items, customerEmail, customerName, shippingAddress } = body
 
     // Create line items for Stripe
     const lineItems = items.map((item: any) => ({
@@ -29,10 +29,13 @@ export async function POST(request: Request) {
       line_items: lineItems,
       mode: "payment",
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/unsuccessful`,
       customer_email: customerEmail,
       metadata: {
         items: JSON.stringify(items),
+        customerName: customerName,
+        customerEmail: customerEmail,
+        shippingAddress: shippingAddress,
       },
     })
 
