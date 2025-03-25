@@ -37,6 +37,42 @@ async function loadImage(url: string): Promise<string> {
   }
 }
 
+// Helper function to format order data for PDF generation
+export function formatOrderDataForPDF(orderData: any): OrderPDFData {
+  // Handle Stripe order data
+  if (orderData.stripeSession) {
+    const session = orderData.stripeSession;
+    const metadata = session.metadata || {};
+    
+    return {
+      orderId: session.id || orderData.orderId,
+      orderDate: session.created || orderData.orderDate,
+      customerName: metadata.customerName || 'Not provided',
+      customerEmail: session.customer_email || metadata.customerEmail || 'Not provided',
+      shippingAddress: metadata.shippingAddress || 'Not provided',
+      paymentMethod: 'card',
+      items: JSON.parse(metadata.items || '[]'),
+      subtotal: orderData.subtotal || 0,
+      shipping: orderData.shipping || 0,
+      total: orderData.total || 0
+    };
+  }
+
+  // Handle regular order data
+  return {
+    orderId: orderData.orderId,
+    orderDate: orderData.orderDate,
+    customerName: orderData.customerName || 'Not provided',
+    customerEmail: orderData.customerEmail || 'Not provided',
+    shippingAddress: orderData.shippingAddress || 'Not provided',
+    paymentMethod: orderData.paymentMethod || 'Bank Transfer',
+    items: orderData.items || [],
+    subtotal: orderData.subtotal || 0,
+    shipping: orderData.shipping || 0,
+    total: orderData.total || 0
+  };
+}
+
 export async function downloadOrderPDF(order: OrderPDFData) {
   const doc = new jsPDF()
   let yPos = 20
@@ -85,10 +121,10 @@ export async function downloadOrderPDF(order: OrderPDFData) {
 
   // Add customer information with properly formatted address
   const customerDetails = [
-    `Name: ${order.customerName}`,
-    `Email: ${order.customerEmail}`,
+    `Name: ${order.customerName || 'Not provided'}`,
+    `Email: ${order.customerEmail || 'Not provided'}`,
     'Shipping Address:',
-    ...formattedAddress.map(line => `  ${line}`), // Add indentation to address lines
+    ...(order.shippingAddress ? formattedAddress.map(line => `  ${line}`) : ['  Not provided']),
     `Payment Method: ${order.paymentMethod === 'card' ? 'Credit/Debit Card' : 'Bank Transfer'}`
   ]
 
