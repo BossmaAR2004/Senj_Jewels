@@ -21,43 +21,71 @@ async function storeOrder(db: Firestore, orderId: string, orderData: Record<stri
   });
 }
 
-
 function OrderDetails() {
   const { db } = useFirebase()
   const searchParams = useSearchParams()
-  const orderId = searchParams ? searchParams.get('orderId') : null
+  const orderId = searchParams?.get('orderId')
+  const sessionId = searchParams?.get('session_id')
   const [orderData, setOrderData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     async function fetchOrder() {
-      if (!db || !orderId) {
-        setError('Invalid order')
-        setLoading(false)
-        return
-      }
-
       try {
-        const orderDoc = await getDoc(doc(db, 'orders', orderId))
-        if (orderDoc.exists()) {
-          const data = orderDoc.data()
-          console.log('Order Data:', data) // Add this to debug
+        if (sessionId) {
+          // Handle Stripe order
+          const response = await fetch(`/api/stripe/session?session_id=${sessionId}`)
+          const data = await response.json()
+          
+          if (data.error) {
+            setError(data.error)
+            setLoading(false)
+            return
+          }
+
+          const session = data.session
+          const metadata = session.metadata || {}
+          
+          console.log('Stripe Session:', session)
+          console.log('Session Metadata:', metadata)
+          console.log('Shipping Address from metadata:', metadata.shippingAddress)
           
           setOrderData({
-            orderId: orderDoc.id,
-            orderDate: data.createdAt?.toDate() || new Date(),
-            customerName: data.customerName || data.customer?.name || '',
-            customerEmail: data.customerEmail || data.customer?.email || '',
-            shippingAddress: data.shippingAddress || data.customer?.address || '',
-            paymentMethod: data.paymentMethod || 'card',
-            items: data.items || [],
-            subtotal: Number(data.subtotal) || 0,
-            shipping: Number(data.shipping) || 0,
-            total: Number(data.total) || 0
+            orderId: session.id,
+            orderDate: new Date(session.created * 1000),
+            customerName: metadata.customerName || 'Not provided',
+            customerEmail: session.customer_email || metadata.customerEmail || 'Not provided',
+            shippingAddress: metadata.shippingAddress || 'Not provided',
+            paymentMethod: 'card',
+            items: JSON.parse(metadata.items || '[]'),
+            subtotal: data.subtotal,
+            shipping: data.shipping,
+            total: data.total,
+            stripeSessionId: session.id
           })
+        } else if (db && orderId) {
+          // Handle Firebase order
+          const orderDoc = await getDoc(doc(db, 'orders', orderId))
+          if (orderDoc.exists()) {
+            const data = orderDoc.data()
+            setOrderData({
+              orderId: orderDoc.id,
+              orderDate: data.createdAt?.toDate() || new Date(),
+              customerName: data.customerName || data.customer?.name || '',
+              customerEmail: data.customerEmail || data.customer?.email || '',
+              shippingAddress: data.shippingAddress || data.customer?.address || '',
+              paymentMethod: data.paymentMethod || 'card',
+              items: data.items || [],
+              subtotal: Number(data.subtotal) || 0,
+              shipping: Number(data.shipping) || 0,
+              total: Number(data.total) || 0
+            })
+          } else {
+            setError('Order not found')
+          }
         } else {
-          setError('Order not found')
+          setError('Invalid order')
         }
       } catch (err) {
         console.error('Error fetching order:', err)
@@ -68,7 +96,7 @@ function OrderDetails() {
     }
 
     fetchOrder()
-  }, [db, orderId])
+  }, [db, orderId, sessionId])
 
   if (loading) {
     return (
