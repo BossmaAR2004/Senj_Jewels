@@ -1,23 +1,25 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Download, Printer } from "lucide-react"
 import { downloadOrderPDF } from "@/lib/pdf-generator"
 import type { CartItem } from "@/types/cart"
 import Image from "next/image"
+import { useSearchParams } from "next/navigation"
 
 type OrderConfirmationProps = {
   orderId: string
   orderDate: Date | string
   customerName: string
   customerEmail: string
-  shippingAddress?: string // Make this optional
+  shippingAddress?: string
   paymentMethod: string
   items: CartItem[]
   subtotal: number
-  shipping?: number // Make this optional
+  shipping?: number
   total: number
+  stripeSessionId?: string
 }
 
 export default function OrderConfirmation({
@@ -27,22 +29,71 @@ export default function OrderConfirmation({
   customerEmail,
   shippingAddress,
   paymentMethod,
-  items = [], // Default to empty array
-  subtotal = 0, // Default to 0 
+  items = [],
+  subtotal = 0,
   shipping = 0,
-  total = 0, // Default to 0
+  total = 0,
+  stripeSessionId,
 }: OrderConfirmationProps) {
   const [downloading, setDownloading] = useState(false)
+  const [orderDetails, setOrderDetails] = useState<OrderConfirmationProps | null>(null)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const sessionId = stripeSessionId || (searchParams?.get('session_id') ?? null)
+    if (sessionId) {
+      // Fetch Stripe session details
+      fetch(`/api/stripe/session?session_id=${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.session) {
+            const session = data.session
+            const metadata = session.metadata || {}
+            setOrderDetails({
+              orderId: session.id,
+              orderDate: new Date(session.created * 1000),
+              customerName: metadata.customerName || 'Not provided',
+              customerEmail: session.customer_email || metadata.customerEmail || 'Not provided',
+              shippingAddress: metadata.shippingAddress || 'Not provided',
+              paymentMethod: 'card',
+              items: JSON.parse(metadata.items || '[]'),
+              subtotal: data.subtotal || 0,
+              shipping: data.shipping || 0,
+              total: data.total || 0,
+              stripeSessionId: session.id
+            })
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching Stripe session:', error)
+        })
+    }
+  }, [stripeSessionId, searchParams])
+
+  // Use orderDetails if available (Stripe order), otherwise use props
+  const order = orderDetails || {
+    orderId,
+    orderDate,
+    customerName,
+    customerEmail,
+    shippingAddress,
+    paymentMethod,
+    items,
+    subtotal,
+    shipping,
+    total,
+    stripeSessionId
+  }
 
   // Format date
   const formattedDate =
-    typeof orderDate === "string"
-      ? new Date(orderDate).toLocaleDateString("en-GB", {
+    typeof order.orderDate === "string"
+      ? new Date(order.orderDate).toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "long",
           year: "numeric",
         })
-      : orderDate.toLocaleDateString("en-GB", {
+      : order.orderDate.toLocaleDateString("en-GB", {
           day: "2-digit",
           month: "long",
           year: "numeric",
@@ -53,16 +104,16 @@ export default function OrderConfirmation({
 
     try {
       downloadOrderPDF({
-        orderId,
-        orderDate,
-        customerName,
-        customerEmail,
-        shippingAddress: shippingAddress || 'No shipping address provided',
-        paymentMethod,
-        items,
-        subtotal,
-        shipping,
-        total,
+        orderId: order.orderId,
+        orderDate: order.orderDate,
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        shippingAddress: order.shippingAddress || 'No shipping address provided',
+        paymentMethod: order.paymentMethod,
+        items: order.items,
+        subtotal: order.subtotal,
+        shipping: order.shipping || 0,
+        total: order.total || calculatedSubtotal + (order.shipping || 0),
       })
     } catch (error) {
       console.error("Error generating PDF:", error)
@@ -76,10 +127,10 @@ export default function OrderConfirmation({
   }
 
   // Format shipping address with fallback
-  const addressLines = shippingAddress ? shippingAddress.split(", ") : []
+  const addressLines = order.shippingAddress ? order.shippingAddress.split(", ") : []
 
   // Calculate subtotal if not provided
-  const calculatedSubtotal = subtotal || items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const calculatedSubtotal = order.subtotal || order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   // Format numbers safely
   const formatPrice = (price: number) => {
@@ -132,7 +183,7 @@ export default function OrderConfirmation({
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-500 print:text-gray-700">Order Number</p>
-            <p className="font-medium">{orderId}</p>
+            <p className="font-medium">{order.orderId}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500 print:text-gray-700">Order Date</p>
@@ -144,10 +195,10 @@ export default function OrderConfirmation({
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         <div>
           <h3 className="font-semibold mb-2 print:text-black">Customer Information</h3>
-          {customerName || customerEmail ? (
+          {order.customerName || order.customerEmail ? (
             <>
-              {customerName && <p className="text-gray-700">{customerName}</p>}
-              {customerEmail && <p className="text-gray-600">{customerEmail}</p>}
+              {order.customerName && <p className="text-gray-700">{order.customerName}</p>}
+              {order.customerEmail && <p className="text-gray-600">{order.customerEmail}</p>}
             </>
           ) : (
             <p className="text-gray-500">No customer information available</p>
@@ -167,7 +218,7 @@ export default function OrderConfirmation({
 
       <div className="mb-6">
         <h3 className="font-semibold mb-2 print:text-black">Payment Method</h3>
-        <p>{paymentMethod === "card" ? "Credit/Debit Card" : "Bank Transfer"}</p>
+        <p>{order.paymentMethod === "card" ? "Credit/Debit Card" : "Bank Transfer"}</p>
       </div>
 
       <div className="mb-6">
@@ -183,7 +234,7 @@ export default function OrderConfirmation({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {items.map((item) => (
+              {order.items.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center">
@@ -217,11 +268,11 @@ export default function OrderConfirmation({
             </div>
             <div className="flex justify-between py-1">
               <span className="text-gray-600 print:text-gray-700">Shipping</span>
-              <span>{shipping === 0 ? "Free" : `£${formatPrice(shipping)}`}</span>
+              <span>{(order.shipping || 0) === 0 ? "Free" : `£${formatPrice(order.shipping || 0)}`}</span>
             </div>
             <div className="flex justify-between py-2 text-lg font-semibold border-t mt-2 print:border-black">
               <span>Total</span>
-              <span>£{formatPrice(total || calculatedSubtotal + shipping)}</span>
+              <span>£{formatPrice(order.total || calculatedSubtotal + (order.shipping || 0))}</span>
             </div>
           </div>
         </div>
