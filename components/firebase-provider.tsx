@@ -19,12 +19,12 @@ import { getStorage } from "firebase/storage"
 
 // Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyCUbJMsEi-dXOlmFLQepCaiuwPAvvDqLJc",
-  authDomain: "sen-jewels.firebaseapp.com",
-  projectId: "sen-jewels",
-  storageBucket: "sen-jewels.appspot.com",
-  messagingSenderId: "1054156103077",
-  appId: "1:1054156103077:web:8c9fabd6f89f2387799c4c",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: "G-09E8RJY4BH",
 }
 
