@@ -59,6 +59,11 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    if (!user) {
+      setError("Please sign in to place an order")
+      return
+    }
+
     if (cart.items.length === 0) {
       setError("Your cart is empty")
       return
@@ -70,38 +75,19 @@ export default function CheckoutPage() {
     try {
       // Create order in Firestore
       const orderRef = await addDoc(collection(db, "orders"), {
-        userId: user?.uid,
-        userEmail: user?.email,
+        userId: user.uid,
+        userEmail: user.email,
         items: cart.items,
         total: cart.total,
         shippingDetails: formData,
         status: "pending",
         paymentMethod,
         createdAt: serverTimestamp(),
-      })
-
-      // Store order details
-      await storeOrder(db, orderRef.id, {
         customerName: formData.fullName,
         customerEmail: formData.email,
-        shippingAddress: formData.address,
-        paymentMethod: paymentMethod,
-        items: cart.items,
-        subtotal: cart.total,
-        shipping: 0,
-        total: cart.total
-      })
-
-      // Send email notification to store owner
-      await sendOrderConfirmationEmail({
-        to: formData.email,
-        orderDetails: {
-          orderId: orderRef.id,
-          customerName: formData.fullName,
-          items: cart.items,
-          total: cart.total,
-          orderDate: new Date().toLocaleString(),
-        },
+        shippingAddress: `${formData.address}, ${formData.city}, ${formData.postalCode}, ${formData.country}`,
+        phone: formData.phone,
+        specialInstructions: formData.specialInstructions
       })
 
       // If payment method is card, redirect to Stripe
@@ -116,6 +102,8 @@ export default function CheckoutPage() {
             items: cart.items,
             customerEmail: formData.email,
             customerName: formData.fullName,
+            shippingAddress: `${formData.address}, ${formData.city}, ${formData.postalCode}, ${formData.country}`,
+            orderId: orderRef.id
           }),
         })
 
@@ -147,6 +135,7 @@ export default function CheckoutPage() {
         }, 2000)
       }
     } catch (error: any) {
+      console.error("Order creation error:", error)
       setError(error.message || "Failed to place order")
     } finally {
       setLoading(false)
