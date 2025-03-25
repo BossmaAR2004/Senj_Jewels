@@ -54,6 +54,7 @@ export default function Navbar() {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/shop">Shop</NavLink>
             <NavLink href="/gemstone">Gemstone</NavLink>
+             <NavLink href="/Bubble-Tea-Earring">Bubble Tea Earring</NavLink>
             <NavLink href="/glass-beads">Glass Beads</NavLink>
             <NavLink href="/instagram">Instagram</NavLink>
             <NavLink href="/contact">Contact</NavLink>
