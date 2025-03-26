@@ -6,7 +6,7 @@ import { useParams } from "next/navigation"
 import { useFirebase } from "@/components/firebase-provider"
 import { Button } from "@/components/ui/button"
 import { doc, getDoc } from "firebase/firestore"
-import { Minus, Plus, ShoppingCart } from "lucide-react"
+import { Minus, Plus, ShoppingCart, Check } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -25,9 +25,10 @@ interface Product {
 }
 
 function ProductDetailContent() {
-  const { db, dispatch, user } = useFirebase()
+  const { db, dispatch, user, cart } = useFirebase()
   const params = useParams<{ id: string }>()
   const productId = params?.id ?? null
+  const [showSuccess, setShowSuccess] = useState(false)
 
   if (!productId) {
     return (
@@ -100,8 +101,10 @@ function ProductDetailContent() {
 
       // Reset quantity
       setQuantity(1)
-
-      // Show success message or notification here
+      
+      // Show success message
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 3000)
     } catch (error) {
       console.error("Error adding to cart:", error)
     } finally {
@@ -133,6 +136,13 @@ function ProductDetailContent() {
 
   return (
     <div className="max-w-6xl mx-auto my-12 px-4">
+      {showSuccess && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50 flex items-center">
+          <Check className="h-5 w-5 mr-2" />
+          <span>Added {quantity} {quantity === 1 ? 'item' : 'items'} to cart</span>
+        </div>
+      )}
+      
       <div className="grid md:grid-cols-2 gap-8">
         <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden">
           <Image
@@ -165,28 +175,33 @@ function ProductDetailContent() {
           </div>
 
           <div className="border-t border-b py-4 mb-6">
-            <div className="flex items-center mb-4">
-              <span className="mr-4">Quantity:</span>
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => updateQuantity(quantity - 1)}
-                  disabled={quantity <= 1 || product.stock <= 0}
-                >
-                  <Minus className="h-3 w-3" />
-                </Button>
-                <span className="mx-4 w-8 text-center">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => updateQuantity(quantity + 1)}
-                  disabled={quantity >= product.stock || product.stock <= 0}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
+                <span className="mr-4">Quantity:</span>
+                <div className="flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => updateQuantity(quantity - 1)}
+                    disabled={quantity <= 1 || product.stock <= 0}
+                  >
+                    <Minus className="h-3 w-3" />
+                  </Button>
+                  <span className="mx-4 w-8 text-center">{quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => updateQuantity(quantity + 1)}
+                    disabled={quantity >= product.stock || product.stock <= 0}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+              <div className="text-sm text-gray-600">
+                Cart Items: {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
               </div>
             </div>
 
