@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
   return (
     <div className="max-w-md mx-auto my-12">
       <div className="text-center mb-8">
-        <Image src="/logo.png" alt="Sen Jewels Logo" width={100} height={100} className="mx-auto mb-4" />
+        <Image src="/Images/logo.png" alt="Sen Jewels Logo" width={100} height={100} className="mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-teal-800">Admin Login</h1>
       </div>
 
