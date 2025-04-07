@@ -20,7 +20,7 @@ interface Product {
   updatedAt?: Date
 }
 
-export default function BubbleTeaEarringsPage() {
+export default function EarringsPage() {
   const { db } = useFirebase()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,6 +31,8 @@ export default function BubbleTeaEarringsPage() {
 
     const fetchProducts = async () => {
       try {
+        // We are still querying the same category "bubble-tea-earrings"
+        // so it pulls your existing data from the cloud
         const earringsQuery = query(
           collection(db, "products"),
           where("category", "==", "bubble-tea-earrings")
@@ -44,7 +46,7 @@ export default function BubbleTeaEarringsPage() {
 
         setProducts(earringsData)
       } catch (error) {
-        console.error("Error fetching bubble tea earrings:", error)
+        console.error("Error fetching earrings:", error)
         setError("Failed to load products")
       } finally {
         setLoading(false)
@@ -79,15 +81,15 @@ export default function BubbleTeaEarringsPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-12">
-        <h1 className="text-3xl md:text-4xl font-bold text-rose-700 mb-4"> Earrings</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-rose-700 mb-4">Earrings</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Sip in style! Explore our adorable bubble tea earring collection—perfect for lovers of kawaii fashion and handcrafted charm.
+          Explore our unique earring collection—perfect for lovers of kawaii fashion and handcrafted charm.
         </p>
       </div>
 
       {products.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No bubble tea earrings found</p>
+          <p className="text-gray-500 mb-4">No earrings found</p>
           <Button asChild className="bg-rose-600 hover:bg-rose-700">
             <Link href="/shop">View All Products</Link>
           </Button>
@@ -115,7 +117,9 @@ function ProductCard({ product }: { product: Product }) {
         />
         {product.stock <= 0 && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">Sold Out</span>
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+              Sold Out
+            </span>
           </div>
         )}
       </Link>
@@ -123,7 +127,9 @@ function ProductCard({ product }: { product: Product }) {
         <h3 className="text-xl font-semibold text-rose-700 mb-2">{product.name}</h3>
         <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
         <div className="flex justify-between items-center">
-          <span className="text-lg font-bold text-rose-800">£{product.price.toFixed(2)}</span>
+          <span className="text-lg font-bold text-rose-800">
+            £{product.price.toFixed(2)}
+          </span>
           <Button asChild className="bg-rose-600 hover:bg-rose-700">
             <Link href={`/product/${product.id}`}>
               <ShoppingCart className="h-4 w-4 mr-2" />
