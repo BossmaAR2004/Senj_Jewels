@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -54,7 +53,13 @@ export default function Navbar() {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/shop">Shop</NavLink>
             <NavLink href="/gemstone">Gemstone</NavLink>
-             <NavLink href="/Earring">Earring</NavLink>
+
+            {/*
+              CHANGED this link to still read "Bubble Tea Earrings"
+              but now routes to "/earrings"
+            */}
+            <NavLink href="/earrings">Bubble Tea Earrings</NavLink>
+
             <NavLink href="/glass-beads">Glass Beads</NavLink>
             <NavLink href="/instagram">Instagram</NavLink>
             <NavLink href="/contact">Contact</NavLink>
@@ -132,9 +137,15 @@ export default function Navbar() {
             <MobileNavLink href="/gemstone" onClick={() => setIsMenuOpen(false)}>
               Gemstone
             </MobileNavLink>
-            <MobileNavLink href="/Earring" onClick={() => setIsMenuOpen(false)}>
-              Earring
+
+            {/*
+              CHANGED this link to still read "Bubble Tea Earrings"
+              but now routes to "/earrings"
+            */}
+            <MobileNavLink href="/earrings" onClick={() => setIsMenuOpen(false)}>
+              Bubble Tea Earrings
             </MobileNavLink>
+
             <MobileNavLink href="/glass-beads" onClick={() => setIsMenuOpen(false)}>
               Glass Beads
             </MobileNavLink>
@@ -184,4 +195,3 @@ function MobileNavLink({
     </Link>
   )
 }
-
