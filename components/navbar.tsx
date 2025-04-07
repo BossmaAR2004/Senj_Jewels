@@ -54,7 +54,7 @@ export default function Navbar() {
             <NavLink href="/">Home</NavLink>
             <NavLink href="/shop">Shop</NavLink>
             <NavLink href="/gemstone">Gemstone</NavLink>
-             <NavLink href="/earring">earring</NavLink>
+             <NavLink href="/Earrings">Earrings</NavLink>
             <NavLink href="/glass-beads">Glass Beads</NavLink>
             <NavLink href="/instagram">Instagram</NavLink>
             <NavLink href="/contact">Contact</NavLink>
@@ -132,8 +132,8 @@ export default function Navbar() {
             <MobileNavLink href="/gemstone" onClick={() => setIsMenuOpen(false)}>
               Gemstone
             </MobileNavLink>
-            <MobileNavLink href="/earring" onClick={() => setIsMenuOpen(false)}>
-             earring
+            <MobileNavLink href="/Earrings" onClick={() => setIsMenuOpen(false)}>
+             Earrings
             </MobileNavLink>
             <MobileNavLink href="/glass-beads" onClick={() => setIsMenuOpen(false)}>
               Glass Beads
