@@ -33,7 +33,7 @@ export default function ContactPage() {
     setIsSubmitting(true)
 
     try {
-      // Add the form data to Firestore dynamically
+      // Add the form data to Firestore
       await addDoc(collection(db, "contactUs"), {
         ...formData,
         createdAt: serverTimestamp(),
@@ -91,7 +91,14 @@ export default function ContactPage() {
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -131,6 +138,21 @@ export default function ContactPage() {
             </div>
 
             <div className="flex items-start">
+              <Phone className="h-5 w-5 text-teal-600 mt-1 mr-3" />
+              <div>
+                <h3 className="font-medium">Instagram</h3>
+                <a
+                  href="https://www.instagram.com/_senjewels_/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  @_senjewels_
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-start">
               <MapPin className="h-5 w-5 text-teal-600 mt-1 mr-3" />
               <div>
                 <h3 className="font-medium">Location</h3>
@@ -143,4 +165,3 @@ export default function ContactPage() {
     </div>
   )
 }
-
