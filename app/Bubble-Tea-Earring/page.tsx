@@ -33,7 +33,7 @@ export default function BubbleTeaEarringsPage() {
       try {
         const earringsQuery = query(
           collection(db, "products"),
-          where("category", "==", "Earrings")
+          where("category", "==", "bubble-tea-earrings")
         )
 
         const snapshot = await getDocs(earringsQuery)
@@ -44,7 +44,7 @@ export default function BubbleTeaEarringsPage() {
 
         setProducts(earringsData)
       } catch (error) {
-        console.error("Error fetching Earrings:", error)
+        console.error("Error fetching bubble tea earrings:", error)
         setError("Failed to load products")
       } finally {
         setLoading(false)
@@ -81,13 +81,13 @@ export default function BubbleTeaEarringsPage() {
       <div className="text-center mb-12">
         <h1 className="text-3xl md:text-4xl font-bold text-rose-700 mb-4"> Earrings</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Sip in style! Explore our adorable Earring collection—perfect for lovers of kawaii fashion and handcrafted charm.
+          Sip in style! Explore our adorable bubble tea earring collection—perfect for lovers of kawaii fashion and handcrafted charm.
         </p>
       </div>
 
       {products.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No Earrings found</p>
+          <p className="text-gray-500 mb-4">No bubble tea earrings found</p>
           <Button asChild className="bg-rose-600 hover:bg-rose-700">
             <Link href="/shop">View All Products</Link>
           </Button>
