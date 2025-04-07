@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Mail, Phone, MapPin, Send } from "lucide-react"
+import { Mail, Instagram, MapPin, Send } from "lucide-react" // Note: Now importing Instagram here
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"
 import { useFirebase } from "@/components/firebase-provider"
 
@@ -138,7 +138,8 @@ export default function ContactPage() {
             </div>
 
             <div className="flex items-start">
-              <Phone className="h-5 w-5 text-teal-600 mt-1 mr-3" />
+              {/* Updated icon to Instagram */}
+              <Instagram className="h-5 w-5 text-teal-600 mt-1 mr-3" />
               <div>
                 <h3 className="font-medium">Instagram</h3>
                 <a
