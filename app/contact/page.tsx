@@ -131,14 +131,6 @@ export default function ContactPage() {
             </div>
 
             <div className="flex items-start">
-              <Phone className="h-5 w-5 text-teal-600 mt-1 mr-3" />
-              <div>
-                <h3 className="font-medium">Phone</h3>
-                <p className="text-gray-600">+44 7438 919798</p>
-              </div>
-            </div>
-
-            <div className="flex items-start">
               <MapPin className="h-5 w-5 text-teal-600 mt-1 mr-3" />
               <div>
                 <h3 className="font-medium">Location</h3>
